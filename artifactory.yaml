@@ -1,0 +1,7 @@
+url: http://10.0.2.15:8082/artifactory
+docker_registry: 10.0.2.15:17001
+repositories:
+  files: delivery_tool.files
+  docker: delivery-tool.docker
+home_dir: /home/mikhail/
+lic_path: /home/mikhail/artifactory.lic

@@ -1,0 +1,16 @@
+# cat system.yaml
+shared:
+    node:
+        id: mikhail-VirtualBox
+        ip: {{ ip }}
+        name: {{ ip }}
+        contextUrl: http://{{ ip }}:8082/artifactory
+    database:
+        type: postgresql
+        driver: org.postgresql.Driver
+        password: password
+        username: artifactory
+        url: jdbc:postgresql://{{ ip }}:5432/artifactory
+router:
+    entrypoints:
+        externalPort: 8082

@@ -1,0 +1,101 @@
+---
+- name: Artifactory
+  hosts: all
+  become: true
+
+
+  tasks:
+  - name: Read variables
+    include_vars:
+      file: vars.yaml
+      
+  - name: Create artifactory folder
+    file: 
+      path: "{{ artifactory_home }}artifactory-pro-7.19.8" 
+      state: directory
+      mode: '0777'
+      recurse: yes    
+
+  - name: Create main folder
+    file: 
+      path: "{{ artifactory_home }}.jfrog/artifactory" 
+      state: directory
+      mode: '0777'
+      recurse: yes
+
+  - name: Create etc folder
+    file: 
+      path: "{{ artifactory_home }}.jfrog/artifactory/var/etc/artifactory/" 
+      state: directory
+      mode: '0777'
+      recurse: yes
+
+  - name: Create bootstrap folder
+    file: 
+      path: "{{ artifactory_home }}.jfrog/artifactory/var/bootstrap/artifactory/tomcat/lib" 
+      state: directory
+      mode: '0777'
+      recurse: yes
+      
+  - name: Put jdbc to the folder
+    ansible.builtin.copy:
+      src: templates/postgresql-42.2.16.jar
+      dest: "{{ artifactory_home }}.jfrog/artifactory/var/bootstrap/artifactory/tomcat/lib"
+      mode: '0777'
+
+  - name: Put system.yaml template
+    template: 
+      src: templates/system.yaml
+      dest: "{{ artifactory_home }}.jfrog/artifactory/var/etc"
+      mode: '0777'
+      
+  - name: Put artifactory.lic template
+    template: 
+      src: "{{ lic_path }}"
+      dest: "{{ artifactory_home }}.jfrog/artifactory/var/etc/artifactory/"
+      mode: '0777'
+
+  - name: Put .env template
+    template: 
+      src: templates/.env
+      dest: "{{ artifactory_home }}artifactory-pro-7.19.8"
+      mode: '0777'
+
+  - name: Put docker-compose.yaml template
+    template: 
+      src: templates/docker-compose.yaml
+      dest: "{{ artifactory_home }}artifactory-pro-7.19.8/"
+      mode: '0777'
+      
+  - name: Put artifactory-nginx.conf template
+    template:
+      src: templates/artifactory-nginx.conf
+      dest: "{{ artifactory_home }}.jfrog/artifactory/var/data/nginx/conf.d/"
+      mode: '0777'
+
+  - name: 0777 access rights
+    file:
+      path: "{{ artifactory_home }}.jfrog/"
+      state: directory
+      mode: '0777'
+      recurse: yes
+      
+  - name: Start containers
+    docker_compose:
+      files: "{{ artifactory_home }}artifactory-pro-7.19.8/docker-compose.yaml"
+      project_name: rt
+      project_src: "{{ artifactory_home }}artifactory-pro-7.19.8/"
+      state: present
+      
+  - name: Wait until Artifactory is available
+    uri:
+      url: "{{ url }}"
+      status_code: 200
+    register: result
+    until: result is succeeded
+    retries: 50
+    delay: 10
+
+
+
+

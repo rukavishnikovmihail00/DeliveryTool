@@ -1,0 +1,7 @@
+files:
+- https://docker.bintray.io/artifactory/bintray-tools/com/jfrog/bintray/client/api/0.2/api-0.2.jar
+- https://docker.bintray.io/artifactory/jfrog-cli/v1/1.0.0/jfrog-cli-linux-386/jfrog
+images:
+- docker.bintray.io/jfrog/artifactory-pro:7.19.8
+- docker.bintray.io/postgres:13.2-alpine
+- docker.bintray.io/jfrog/nginx-artifactory-pro:7.19.8
