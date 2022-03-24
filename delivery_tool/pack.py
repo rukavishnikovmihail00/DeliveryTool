@@ -62,8 +62,7 @@ def pack(config, log):
 
     if exceptions:
         raise ApplicationException("Some files were not downloaded:" + '\n'.join(exceptions))
-
-    if not exceptions:
+    else:
         log.info("All the files have been downloaded successfully")
         log.info("Starting to create archive")
         shutil.make_archive('ArchContent', 'zip', f"{tf.name}/content")

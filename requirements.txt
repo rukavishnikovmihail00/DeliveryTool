@@ -1,4 +1,5 @@
 pyyaml>=5.3.1,<6
+testresources>=2.0.1
 requests>=2.25.1
 backoff>=1.10.0
 dohq-artifactory>=0.7.574

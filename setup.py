@@ -29,10 +29,11 @@ setup(
     author='Mikhail Rukavishnikov',
     author_email='rukavishnikovmihail00@yandex.ru',
     description='Delivery tool project',
-    install_requires=['pyyaml>=5.3.1,<6', 'requests>=2.25.1', 'backoff>=1.10.0', 'dohq-artifactory>=0.7.574', 'docker>=5.0.0', 'docker-compose>=1.29.2'],
+    install_requires=['pyyaml>=5.3.1,<6', 'requests>=2.25.1', 'backoff>=1.10.0', 'dohq-artifactory>=0.7.574',
+                      'testresources>=2.0.1', 'docker>=5.0.0', 'docker-compose>=1.29.2'],
     package_data={
         'delivery_tool': [
-            'artifactory.yaml', 'content/*', 'hosts', 'rerun-artifactory.yaml', 'config.yaml'
+            'artifactory.yaml', 'content/*', 'hosts', 'rerun-artifactory.yaml', 'config.yaml', 'ansible.zip'
         ]
     },
     packages=find_packages(),

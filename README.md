@@ -32,7 +32,7 @@ There is an information about Delivery tool usage
 
 - __Specify your credentials for Artifactory instance__
 
-    Note, that credentials must be `ARTIFACTORY_LOG=admin`:`ARTIFACTORY_LOG=password` for the first Artifactory launch.
+    Note, that credentials must be `ARTIFACTORY_LOG=admin`:`ARTIFACTORY_PASS=password` for the first Artifactory launch.
 
 - __Run the tool__
 	
@@ -44,7 +44,7 @@ That`s how Delivery tool functions are used:
 
 - __install__ 
 
-    usage: **python3 delivery-tool-rukavishnikov.pyz install [-r 1]**
+    usage: **python3 delivery-tool-rukavishnikov-0.1.0.pyz install [-r 1]**
 	
     `-r` is optional, so you can include it, if you need to create Generic repository automatically.
     Note,  that `install` option needs sudo privileges.
@@ -54,17 +54,17 @@ That`s how Delivery tool functions are used:
 
 - __pack__
 
-    usage: **python3 delivery-tool-rukavishnikov.pyz pack**
+    usage: **python3 delivery-tool-rukavishnikov-0.1.0.pyz pack**
 
 - __upload__
 
-    usage: **python3 delivery-tool-rukavishnikov.pyz upload**
+    usage: **python3 delivery-tool-rukavishnikov-0.1.0.pyz upload**
 
     Generic and Docker repositories are required for `upload` and `show` functions
 
 - __show__
 
-    usage: **python3 delivery-tool-rukavishnikov.pyz show**
+    usage: **python3 delivery-tool-rukavishnikov-0.1.0.pyz show**
 ________________________________________________________________________________________________________________________
 
 ### The example of config.yaml

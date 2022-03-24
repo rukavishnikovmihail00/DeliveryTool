@@ -70,7 +70,6 @@ def upload(config, archive, log, creds):
     subprocess.run(['skopeo', '--insecure-policy', 'login', '--tls-verify=false', '-u', creds['login'], '-p',
                     creds['password'], config['docker_registry']])
 
-
     for i in os.listdir(tf.name):
         if (i != 'images') and (i != 'layers') and (i != 'images_info.yaml'):
             repos.deploy_file(tf.name + '/' + i)
@@ -106,5 +105,5 @@ def upload(config, archive, log, creds):
 
     if exceptions:
         raise ApplicationException("Some files were not uploaded:" + '\n'.join(exceptions))
-    if not exceptions:
+    else:
         log.info("All the files have been uploaded successfully")

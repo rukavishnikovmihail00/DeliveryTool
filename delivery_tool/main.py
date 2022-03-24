@@ -1,16 +1,17 @@
 import logging
+import os
 import sys
 from argparse import ArgumentParser
+from datetime import datetime
+
+import yaml
+
 import delivery_tool
 from delivery_tool.exceptions import ApplicationException
-from delivery_tool.pack import pack
-from delivery_tool.upload import upload
-from delivery_tool.show import show
 from delivery_tool.install import install
-from datetime import datetime
-import os
-import tempfile
-import yaml
+from delivery_tool.pack import pack
+from delivery_tool.show import show
+from delivery_tool.upload import upload
 
 
 def parse():
@@ -27,12 +28,12 @@ def parse():
 
 
 def parse_file(yaml_file):
-        try:
-            with open(yaml_file, 'r') as f:
-                config = yaml.load(f, Loader = yaml.Loader)
-        except FileNotFoundError as e:
-            raise ApplicationException("File named " + yaml_file + " hasn`t been found") from e
-        return config
+    try:
+        with open(yaml_file, 'r') as f:
+            config = yaml.load(f, Loader=yaml.Loader)
+    except FileNotFoundError as e:
+        raise ApplicationException("File named " + yaml_file + " hasn`t been found") from e
+    return config
 
 
 def init_logger(log, name_func):
@@ -58,17 +59,14 @@ def init_logger(log, name_func):
     log.addHandler(ch)
 
 
-
 def main():
     log = logging.getLogger()
     try:
-        tf = tempfile.TemporaryDirectory()
         args = parse()
         
         init_logger(log, args['subparser'])
         
         log.info('=========== PROCESS INFORMATION ===========')
-
 
         if args['subparser'] == 'show':
             creds = {'login': os.getenv('ARTIFACTORY_LOG'), 'password': os.getenv('ARTIFACTORY_PASS')}
@@ -88,8 +86,7 @@ def main():
                 rep = False
             config = parse_file('artifactory.yaml')
             creds = {'login': os.getenv('ARTIFACTORY_LOG'), 'password': os.getenv('ARTIFACTORY_PASS')}
-            install(log, 'create.yaml', config, creds, rep, tf)
-
+            install(log, 'create.yaml', config, creds, rep)
 
     except ApplicationException as e:
         log.error(e)
