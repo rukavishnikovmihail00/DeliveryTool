@@ -1,17 +1,23 @@
+import logging
+import os
+import subprocess
+import tempfile
+import zipfile
+from functools import partial
+from multiprocessing.dummy import Pool
+
 import backoff
 import requests
 import yaml
-from artifactory import ArtifactoryPath, RepositoryLocal
-import zipfile
-import os
-import subprocess
-from multiprocessing.dummy import Pool
-from functools import partial
-from delivery_tool.exceptions import ApplicationException
-import tempfile
+from artifactory import RepositoryLocal
 
+from delivery_tool.artifactory import connect
+from delivery_tool.exceptions import ApplicationException
+from delivery_tool.utils import parse_file
+from delivery_tool.variables import ARCHIVE_NAME, ARTIFACTORY_YAML_NAME
 
 tf = tempfile.TemporaryDirectory()
+log = logging.getLogger(__name__)
 
 
 @backoff.on_exception(backoff.expo, requests.exceptions.RequestException, max_tries=10)
@@ -25,28 +31,23 @@ def thread_process(artifactory_url, image):
                     'docker://' + artifactory_url + '/' + image])
 
 
-@backoff.on_exception(backoff.expo, requests.exceptions.RequestException, max_tries=10)
-def connect(url, name, creds):
-    art = ArtifactoryPath(url + '/' + name, auth=(creds['login'], creds['password']))
-    return art
-
-
-def upload(config, archive, log, creds):
+def upload(creds):
+    config = parse_file(ARTIFACTORY_YAML_NAME)
     exceptions = []
     url = config['url']
     name = config['repositories']['files']
     name_docker = config['repositories']['docker']
 
     try:
-        art = connect(url, name, creds)
+        artifactory = connect(url, name, creds)
     except requests.exceptions.RequestException as e:
-        exceptions.append(e)
+        raise ApplicationException(f"Couldn`t connect to Artifactory by {url}") from e
 
-    res_docker = art.find_repository_local(name_docker)
+    res_docker = artifactory.find_repository_local(name_docker)
 
-    rep = art.find_repository_local(name)
+    rep = artifactory.find_repository_local(name)
     if rep is None:
-        repos = RepositoryLocal(art, name)
+        repos = RepositoryLocal(artifactory, name)
         repos.create()
     else:
         repos = rep
@@ -57,14 +58,14 @@ def upload(config, archive, log, creds):
     for p in res_docker:
         summary_size_docker += p.stat().size
 
-    res = art.find_repository_local(name)
+    res = artifactory.find_repository_local(name)
     for p in res:
         summary_size += p.stat().size
 
     log.info(f"Summary size of files in {name} is {round(summary_size / 1048576, 2)} MB")
     log.info(f"Summary size of files in {name_docker} is {round(summary_size_docker / 1048576, 2)} MB")
 
-    zipfile.ZipFile(archive).extractall(tf.name)
+    zipfile.ZipFile(ARCHIVE_NAME).extractall(tf.name)
     
     log.info("===== Uploading docker images =====")
     subprocess.run(['skopeo', '--insecure-policy', 'login', '--tls-verify=false', '-u', creds['login'], '-p',
@@ -93,7 +94,7 @@ def upload(config, archive, log, creds):
     for p in res_docker:
         summary_size_docker_last += p.stat().size
 
-    res = art.find_repository_local(name)
+    res = artifactory.find_repository_local(name)
     for p in res:
         summary_size_last += p.stat().size
 

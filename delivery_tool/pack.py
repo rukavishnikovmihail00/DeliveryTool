@@ -1,3 +1,5 @@
+import logging
+
 import backoff
 import requests
 import shutil
@@ -8,8 +10,11 @@ import yaml
 from delivery_tool.exceptions import ApplicationException
 import tempfile
 
+from delivery_tool.utils import parse_file
+from delivery_tool.variables import CONFIG_YAML_NAME
 
 tf = tempfile.TemporaryDirectory()
+log = logging.getLogger(__name__)
 
 
 @backoff.on_exception(backoff.expo, requests.exceptions.RequestException, max_tries=5)
@@ -29,7 +34,8 @@ def thread_process(image):
                     'docker://' + image, f"oci:{tf.name}/content/images/" + oci])
 
 
-def pack(config, log):
+def pack():
+    config = parse_file(CONFIG_YAML_NAME)
     exceptions = []
     
     os.makedirs(f"{tf.name}/content/images")
@@ -53,7 +59,7 @@ def pack(config, log):
     with open(f"{tf.name}/content/images_info.yaml", 'w') as im:
         yaml.dump(data, im)
 
-    log.info("===== Pulling docker images =====")
+    log.info("### Pull docker images ###")
 
     pool = Pool(4)
     threads = pool.map(thread_process, config['images'])
@@ -64,6 +70,6 @@ def pack(config, log):
         raise ApplicationException("Some files were not downloaded:" + '\n'.join(exceptions))
     else:
         log.info("All the files have been downloaded successfully")
-        log.info("Starting to create archive")
+        log.info("Create archive")
         shutil.make_archive('ArchContent', 'zip', f"{tf.name}/content")
         log.info("Archive has been created")

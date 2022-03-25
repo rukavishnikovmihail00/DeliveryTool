@@ -40,31 +40,47 @@ There is an information about Delivery tool usage
 
 ________________________________________________________________________________________________________________________
 
-That`s how Delivery tool functions are used:
+## Usage
 
 - __install__ 
 
-    usage: **python3 delivery-tool-rukavishnikov-0.1.0.pyz install [-r 1]**
-	
+  ```python3 delivery-tool-rukavishnikov-0.1.0.pyz install [-r 1]```
+
     `-r` is optional, so you can include it, if you need to create Generic repository automatically.
     Note,  that `install` option needs sudo privileges.
 
 
-    For the next functions you need to contain `create.yaml` and `artifactory.yaml` files in the same directory as delivery-tool-rukavishnikov.pyz 
+  For the next functions you need to contain `create.yaml` and `artifactory.yaml` files in the same directory as delivery-tool-rukavishnikov.pyz 
 
 - __pack__
 
-    usage: **python3 delivery-tool-rukavishnikov-0.1.0.pyz pack**
+   ```python3 delivery-tool-rukavishnikov-0.1.0.pyz pack```  
 
-- __upload__
 
-    usage: **python3 delivery-tool-rukavishnikov-0.1.0.pyz upload**
+- __upload__  
 
-    Generic and Docker repositories are required for `upload` and `show` functions
+  ```python3 delivery-tool-rukavishnikov-0.1.0.pyz upload```
+
+Generic and Docker repositories are required for `upload` and `show` functions.  
+
+Artifactory UI also requires a manual action in order to push images with `skopeo`:  
+
+- Go to Artifactory -> General -> HTTP Settings
+- Choose `port` as Docker Access Method
+- Choose `nginx` as Server Provider
+- Specify `localhost` as Internal Hostname and Public Server Name
+- Specify HTTP Port (17001 according to my example)
+
+Don't forget to `export` your new credentials, do:
+```shell
+export ARTIFACTORY_LOG=<your login>
+export ARTIFACTORY_PASS=<your new password>
+```
+
 
 - __show__
 
-    usage: **python3 delivery-tool-rukavishnikov-0.1.0.pyz show**
+    ```python3 delivery-tool-rukavishnikov-0.1.0.pyz show```
 ________________________________________________________________________________________________________________________
 
 ### The example of config.yaml
