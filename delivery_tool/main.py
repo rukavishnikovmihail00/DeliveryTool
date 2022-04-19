@@ -1,5 +1,4 @@
 import logging
-import os
 import sys
 
 from delivery_tool.exceptions import ApplicationException
@@ -20,16 +19,13 @@ def main():
         log.info('### Start Delivery Tool ###')
 
         if args['subparser'] == 'show':
-            creds = {'login': os.getenv('ARTIFACTORY_LOG'), 'password': os.getenv('ARTIFACTORY_PASS')}
-            show(creds)
+            show()
         if args['subparser'] == 'upload':
-            creds = {'login': os.getenv('ARTIFACTORY_LOG'), 'password': os.getenv('ARTIFACTORY_PASS')}
-            upload(creds)
+            upload()
         if args['subparser'] == 'pack':
             pack()
         if args['subparser'] == 'install':
-            creds = {'login': os.getenv('ARTIFACTORY_LOG'), 'password': os.getenv('ARTIFACTORY_PASS')}
-            install(creds, args['repository'])
+            install(args['repository'])
 
     except ApplicationException as e:
         log.error(e)

@@ -31,7 +31,8 @@ def thread_process(artifactory_url, image):
                     'docker://' + artifactory_url + '/' + image])
 
 
-def upload(creds):
+def upload():
+    log.info("### Execute upload function ###")
     config = parse_file(ARTIFACTORY_YAML_NAME)
     exceptions = []
     url = config['url']
@@ -39,37 +40,37 @@ def upload(creds):
     name_docker = config['repositories']['docker']
 
     try:
-        artifactory = connect(url, name, creds)
+        artifactory = connect(url, name)
     except requests.exceptions.RequestException as e:
         raise ApplicationException(f"Couldn`t connect to Artifactory by {url}") from e
 
-    res_docker = artifactory.find_repository_local(name_docker)
+    repository_docker = artifactory.find_repository_local(name_docker)
 
-    rep = artifactory.find_repository_local(name)
-    if rep is None:
+    repository_artifactory = artifactory.find_repository_local(name)
+    if repository_artifactory is None:
         repos = RepositoryLocal(artifactory, name)
         repos.create()
     else:
-        repos = rep
+        repos = repository_artifactory
 
     summary_size = 0
     summary_size_docker = 0
 
-    for p in res_docker:
-        summary_size_docker += p.stat().size
+    for item in repository_docker:
+        summary_size_docker += item.stat().size
 
-    res = artifactory.find_repository_local(name)
-    for p in res:
-        summary_size += p.stat().size
+    repository_artifactory = artifactory.find_repository_local(name)
+    for item in repository_artifactory:
+        summary_size += item.stat().size
 
     log.info(f"Summary size of files in {name} is {round(summary_size / 1048576, 2)} MB")
     log.info(f"Summary size of files in {name_docker} is {round(summary_size_docker / 1048576, 2)} MB")
 
     zipfile.ZipFile(ARCHIVE_NAME).extractall(tf.name)
     
-    log.info("===== Uploading docker images =====")
-    subprocess.run(['skopeo', '--insecure-policy', 'login', '--tls-verify=false', '-u', creds['login'], '-p',
-                    creds['password'], config['docker_registry']])
+    log.info("Upload docker images")
+    subprocess.run(['skopeo', '--insecure-policy', 'login', '--tls-verify=false', '-u', os.getenv('ARTIFACTORY_LOG'), '-p',
+                    os.getenv('ARTIFACTORY_PASS'), config['docker_registry']])
 
     for i in os.listdir(tf.name):
         if (i != 'images') and (i != 'layers') and (i != 'images_info.yaml'):
@@ -91,7 +92,7 @@ def upload(creds):
     summary_size_last = 0
     summary_size_docker_last = 0
 
-    for p in res_docker:
+    for p in repository_docker:
         summary_size_docker_last += p.stat().size
 
     res = artifactory.find_repository_local(name)

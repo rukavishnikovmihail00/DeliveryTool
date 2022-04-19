@@ -1,27 +1,19 @@
 import logging
-
-import backoff
-import requests
+import os
 import shutil
 import subprocess
-from multiprocessing.dummy import Pool
-import os
-import yaml
-from delivery_tool.exceptions import ApplicationException
 import tempfile
+from multiprocessing.dummy import Pool
 
-from delivery_tool.utils import parse_file
+import requests
+import yaml
+
+from delivery_tool.exceptions import ApplicationException
+from delivery_tool.utils import parse_file, download_files
 from delivery_tool.variables import CONFIG_YAML_NAME
 
 tf = tempfile.TemporaryDirectory()
 log = logging.getLogger(__name__)
-
-
-@backoff.on_exception(backoff.expo, requests.exceptions.RequestException, max_tries=5)
-def download_files(url):
-    response = requests.get(url)
-    response.raise_for_status()
-    return requests.get(url).content
 
 
 def thread_process(image):
@@ -35,12 +27,13 @@ def thread_process(image):
 
 
 def pack():
+    log.info("### Execute pack function ###")
     config = parse_file(CONFIG_YAML_NAME)
-    exceptions = []
     
     os.makedirs(f"{tf.name}/content/images")
     os.mkdir(f"{tf.name}/content/layers")
 
+    exceptions = []
     for el in config['files']:
         log.info(el)
         s = el.rfind('/')
@@ -52,15 +45,13 @@ def pack():
             exceptions.append(e)
 
     data = {'images': []}
-
     for el in config['images']:
         data['images'].append(el)
 
-    with open(f"{tf.name}/content/images_info.yaml", 'w') as im:
-        yaml.dump(data, im)
+    with open(f"{tf.name}/content/images_info.yaml", 'w') as images_info:
+        yaml.dump(data, images_info)
 
     log.info("### Pull docker images ###")
-
     pool = Pool(4)
     threads = pool.map(thread_process, config['images'])
     pool.close()

@@ -1,3 +1,5 @@
+import backoff
+import requests
 import yaml
 
 from delivery_tool.exceptions import ApplicationException
@@ -12,3 +14,8 @@ def parse_file(filename):
     return config
 
 
+@backoff.on_exception(backoff.expo, requests.exceptions.RequestException, max_tries=5)
+def download_files(url):
+    response = requests.get(url)
+    response.raise_for_status()
+    return requests.get(url).content
