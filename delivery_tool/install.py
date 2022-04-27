@@ -4,6 +4,7 @@ import tempfile
 import zipfile
 
 import yaml
+from dohq_artifactory import RepositoryLocal
 
 from delivery_tool.artifactory import create_repo
 from delivery_tool.utils import parse_file
@@ -35,10 +36,10 @@ def install(is_create_repository):
     subprocess.run(['ansible-playbook', '-i', f"{tf.name}/ansible/hosts", f"{tf.name}/ansible/{PLAYBOOK_NAME}"])
 
     if is_create_repository:
-        log.info("Create generic repository")
-        create_repo(config)
-
-
+        log.info("### Create repositories ###")
+        create_repo(config['url'], config['repositories']['files'], RepositoryLocal.GENERIC)
+        log.info("Create docker repositories")
+        create_repo(config['url'], config['repositories']['docker'], RepositoryLocal.DOCKER)
 
 
 

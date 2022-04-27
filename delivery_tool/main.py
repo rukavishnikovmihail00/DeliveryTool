@@ -17,7 +17,6 @@ def main():
         init_logger(args['subparser'])
         
         log.info('### Start Delivery Tool ###')
-
         if args['subparser'] == 'show':
             show()
         if args['subparser'] == 'upload':

@@ -47,7 +47,7 @@ ________________________________________________________________________________
   ```python3 delivery-tool-rukavishnikov-0.1.0.pyz install [-r 1]```
 
     `-r` is optional, so you can include it, if you need to create Generic repository automatically.
-    Note,  that `install` option needs sudo privileges.
+    Note, that you need to specify default `admin/password` credentials for `install -r True` option.
 
 
   For the next functions you need to contain `create.yaml` and `artifactory.yaml` files in the same directory as delivery-tool-rukavishnikov.pyz 

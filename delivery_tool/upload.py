@@ -11,7 +11,7 @@ import requests
 import yaml
 from artifactory import RepositoryLocal
 
-from delivery_tool.artifactory import connect
+from delivery_tool.artifactory import connect, calculate_by_repository
 from delivery_tool.exceptions import ApplicationException
 from delivery_tool.utils import parse_file
 from delivery_tool.variables import ARCHIVE_NAME, ARTIFACTORY_YAML_NAME
@@ -36,35 +36,25 @@ def upload():
     config = parse_file(ARTIFACTORY_YAML_NAME)
     exceptions = []
     url = config['url']
-    name = config['repositories']['files']
+    name_files = config['repositories']['files']
     name_docker = config['repositories']['docker']
 
     try:
-        artifactory = connect(url, name)
+        artifactory = connect(url, name_files)
     except requests.exceptions.RequestException as e:
         raise ApplicationException(f"Couldn`t connect to Artifactory by {url}") from e
 
     repository_docker = artifactory.find_repository_local(name_docker)
+    repository_files = artifactory.find_repository_local(name_files)
 
-    repository_artifactory = artifactory.find_repository_local(name)
-    if repository_artifactory is None:
-        repos = RepositoryLocal(artifactory, name)
-        repos.create()
+    if repository_files is None:
+        repository_generic = RepositoryLocal(artifactory, name_files)
+        repository_generic.create()
     else:
-        repos = repository_artifactory
+        repository_generic = repository_files
 
-    summary_size = 0
-    summary_size_docker = 0
-
-    for item in repository_docker:
-        summary_size_docker += item.stat().size
-
-    repository_artifactory = artifactory.find_repository_local(name)
-    for item in repository_artifactory:
-        summary_size += item.stat().size
-
-    log.info(f"Summary size of files in {name} is {round(summary_size / 1048576, 2)} MB")
-    log.info(f"Summary size of files in {name_docker} is {round(summary_size_docker / 1048576, 2)} MB")
+    size_generic = calculate_by_repository(repository_generic, name_files)
+    size_docker = calculate_by_repository(repository_docker, name_docker)
 
     zipfile.ZipFile(ARCHIVE_NAME).extractall(tf.name)
     
@@ -74,8 +64,7 @@ def upload():
 
     for i in os.listdir(tf.name):
         if (i != 'images') and (i != 'layers') and (i != 'images_info.yaml'):
-            repos.deploy_file(tf.name + '/' + i)
-
+            repository_generic.deploy_file(tf.name + '/' + i)
     with open(tf.name + '/images_info.yaml', 'r') as im:
         images_list = yaml.load(im, Loader=yaml.Loader)
 
@@ -85,27 +74,18 @@ def upload():
     except requests.exceptions.RequestException as e:
         exceptions.append(e)
     threads = pool.map(func, images_list['images'])
-
     pool.close()
     pool.join()
-
-    summary_size_last = 0
-    summary_size_docker_last = 0
-
-    for p in repository_docker:
-        summary_size_docker_last += p.stat().size
-
-    res = artifactory.find_repository_local(name)
-    for p in res:
-        summary_size_last += p.stat().size
-
-    log.info(f"Summary size of files in {name} after the uploading is {round(summary_size_last / 1048576, 2)} MB")
-    log.info(f"Summary size of files in {name_docker} after the uploading is {round(summary_size_docker_last / 1048576, 2)} MB")
-
-    log.info(f"The difference in {name} is {round((summary_size_last - summary_size) / 1048576, 2)} MB")
-    log.info(f"The difference in {name_docker} is {round((summary_size_docker_last - summary_size_docker) / 1048576, 2)} MB")
 
     if exceptions:
         raise ApplicationException("Some files were not uploaded:" + '\n'.join(exceptions))
     else:
         log.info("All the files have been uploaded successfully")
+
+    new_size_generic = calculate_by_repository(repository_generic, name_files)
+    new_size_docker = calculate_by_repository(repository_docker, name_docker)
+
+    log.info(f"The difference in {name_files} is {round((new_size_generic - size_generic) / 1048576, 2)} MB")
+    log.info(f"The difference in {name_docker} is {round((new_size_docker - size_docker) / 1048576, 2)} MB")
+
+
